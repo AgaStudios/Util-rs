@@ -13,7 +13,7 @@ pub type TokenOptionsCallback<TK> = fn(char, Position, String) -> (Token<TK>, us
 
 pub type TokenOptions<'a, TK> = Vec<(&'a str, TokenOptionsCallback<TK>)>;
 
-pub fn tokenize<TK>(input: String, options: TokenOptions<TK>) -> Vec<Token<TK>> {
+pub fn tokenize<TK>(input: String, options: TokenOptions<TK>) -> Result<Vec<Token<TK>>, Box<dyn std::error::Error>> {
     let lines = input.lines();
     let mut tokens = Vec::new();
     for (line_number, line) in lines.enumerate() {
@@ -30,11 +30,14 @@ pub fn tokenize<TK>(input: String, options: TokenOptions<TK>) -> Vec<Token<TK>> 
                 column += consumed;
                 break;
             }
+
             if let Some(token) = token {
                 tokens.push(token);
+            } else {
+                return Err(format!("'{}'", c).into());
             }
             column += 1;
         }
     }
-    tokens
+    Ok(tokens)
 }
