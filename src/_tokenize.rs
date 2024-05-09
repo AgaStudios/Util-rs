@@ -12,10 +12,11 @@ impl Clone for Position {
 }
 impl Copy for Position {}
 
-pub struct Token< TokenKind> {
+pub struct Token<TokenKind> {
     pub token_type: TokenKind,
     pub value: String,
     pub position: Position,
+    pub meta: String,
 }
 
 pub type TokenOptionsCallback<TK> = fn(char, Position, String) -> (Token<TK>, usize);
