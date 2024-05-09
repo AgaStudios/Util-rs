@@ -19,7 +19,7 @@ pub struct Token<TokenKind> {
     pub meta: String,
 }
 
-pub type TokenOptionsCallback<TK> = fn(char, Position, String) -> (Token<TK>, usize);
+pub type TokenOptionsCallback<TK> = fn(char, Position, String, String) -> (Token<TK>, usize);
 
 pub enum TokenOptionCondition {
     Chars(&'static str),
@@ -31,6 +31,7 @@ pub type TokenOption<'a, TK> = (TokenOptionCondition, TokenOptionsCallback<TK>);
 pub fn tokenize<TK>(
     input: String,
     options: Vec<TokenOption<TK>>,
+    meta: String,
 ) -> Result<Vec<Token<TK>>, Box<dyn std::error::Error>> {
     let lines = input.lines();
     let mut tokens = Vec::new();
@@ -50,7 +51,7 @@ pub fn tokenize<TK>(
                     line: line_number,
                     column,
                 };
-                let (t, consumed) = result(c, position, line.to_string());
+                let (t, consumed) = result(c, position, line.to_string(), meta.clone());
                 token = Some(t);
                 column += consumed;
                 break;
