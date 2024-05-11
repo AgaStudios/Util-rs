@@ -19,14 +19,23 @@ pub struct Token<TokenKind> {
     pub meta: String,
 }
 
-pub type TokenOptionsCallback<TK> = fn(char, Position, String, String) -> (Token<TK>, usize);
+pub type TokenOptionsCallbackFull<TK> =
+    fn(ch: char, pos: Position, line: String, meta: String) -> (Token<TK>, usize);
+pub type TokenOptionsCallbackSimple<TK> = fn(meta: String) -> (TK, String);
+pub type TokenOptionsCallbackMin<TK> = fn() -> TK;
 
 pub enum TokenOptionCondition {
     Chars(&'static str),
     Fn(fn(char) -> bool),
 }
 
-pub type TokenOption<'a, TK> = (TokenOptionCondition, TokenOptionsCallback<TK>);
+pub enum TokenOptionResult<TK> {
+    Full(TokenOptionsCallbackFull<TK>),
+    Simple(TokenOptionsCallbackSimple<TK>),
+    Min(TokenOptionsCallbackMin<TK>),
+}
+
+pub type TokenOption<'a, TK> = (TokenOptionCondition, TokenOptionResult<TK>);
 
 pub fn tokenize<TK>(
     input: String,
@@ -37,7 +46,12 @@ pub fn tokenize<TK>(
     let mut tokens = Vec::new();
     for (line_number, line) in lines.enumerate() {
         let mut column = 0;
-        for c in line.chars() {
+        while column < line.len() {
+            let c = line.chars().nth(column);
+            if c.is_none() {
+                break;
+            }
+            let c = c.unwrap();
             let mut token: Option<Token<TK>> = None;
             for (condition, result) in &options {
                 let is_valid = match condition {
@@ -51,7 +65,33 @@ pub fn tokenize<TK>(
                     line: line_number,
                     column,
                 };
-                let (t, consumed) = result(c, position, line.to_string(), meta.clone());
+                let (t, consumed) = match result {
+                    TokenOptionResult::Full(f) => f(c, position, line.to_string(), meta.clone()),
+                    TokenOptionResult::Simple(f) => {
+                        let (token_type, meta) = f(meta.clone());
+                        (
+                            Token {
+                                token_type,
+                                value: c.to_string(),
+                                position,
+                                meta,
+                            },
+                            0,
+                        )
+                    }
+                    TokenOptionResult::Min(f) => {
+                        let token_type = f();
+                        (
+                            Token {
+                                token_type,
+                                value: c.to_string(),
+                                position,
+                                meta: meta.clone(),
+                            },
+                            0,
+                        )
+                    }
+                };
                 token = Some(t);
                 column += consumed;
                 break;
