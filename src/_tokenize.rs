@@ -1,26 +1,58 @@
+use std::cmp::Ordering;
+
+#[derive(Clone, Copy, PartialEq, Eq, Ord, Debug)]
 pub struct Position {
     pub line: usize,
     pub column: usize,
 }
-impl Clone for Position {
-    fn clone(&self) -> Self {
-        Position {
-            line: self.line,
-            column: self.column,
+impl PartialOrd for Position {
+    fn partial_cmp(&self, other: &Position) -> Option<Ordering> {
+        if self.line < other.line {
+            return Some(Ordering::Less);
+        } else if self.line > other.line {
+            return Some(Ordering::Greater);
+        } else if self.column < other.column {
+            return Some(Ordering::Less);
+        } else if self.column > other.column {
+            return Some(Ordering::Greater);
+        } else {
+            return Some(Ordering::Equal);
         }
     }
 }
-impl Copy for Position {}
+
+#[derive(Clone, Copy, PartialEq, Eq, Ord, Debug)]
+pub struct Location {
+    pub start: Position,
+    pub end: Position,
+    pub length: usize,
+}
+
+impl PartialOrd for Location {
+    fn partial_cmp(&self, other: &Location) -> Option<Ordering> {
+        if self.start < other.start {
+            return Some(Ordering::Less);
+        } else if self.start > other.start {
+            return Some(Ordering::Greater);
+        } else if self.end < other.end {
+            return Some(Ordering::Less);
+        } else if self.end > other.end {
+            return Some(Ordering::Greater);
+        } else {
+            return Some(Ordering::Equal);
+        }
+    }
+}
 
 pub struct Token<TokenKind> {
     pub token_type: TokenKind,
     pub value: String,
-    pub position: Position,
+    pub location: Location,
     pub meta: String,
 }
 
 pub type TokenOptionsCallbackFull<TK> =
-    fn(ch: char, pos: Position, line: String, meta: String) -> (Token<TK>, usize);
+    fn(ch: char, start_pos: Position, line: String, meta: String) -> (Token<TK>, usize);
 pub type TokenOptionsCallbackMeta<TK> = fn(meta: String) -> (TK, String);
 pub type TokenOptionsCallbackChar<TK> = fn(char: char) -> TK;
 pub type TokenOptionsCallbackMin<TK> = fn() -> TK;
@@ -75,7 +107,14 @@ pub fn tokenize<TK>(
                             Token {
                                 token_type,
                                 value: c.to_string(),
-                                position,
+                                location: Location {
+                                    start: position,
+                                    end: Position {
+                                        line: line_number,
+                                        column: column + 1,
+                                    },
+                                    length: 1,
+                                },
                                 meta,
                             },
                             0,
@@ -87,7 +126,14 @@ pub fn tokenize<TK>(
                             Token {
                                 token_type,
                                 value: c.to_string(),
-                                position,
+                                location: Location {
+                                    start: position,
+                                    end: Position {
+                                        line: line_number,
+                                        column: column + 1,
+                                    },
+                                    length: 1,
+                                },
                                 meta: meta.clone(),
                             },
                             0,
@@ -99,7 +145,14 @@ pub fn tokenize<TK>(
                             Token {
                                 token_type,
                                 value: c.to_string(),
-                                position,
+                                location: Location {
+                                    start: position,
+                                    end: Position {
+                                        line: line_number,
+                                        column: column + 1,
+                                    },
+                                    length: 1,
+                                },
                                 meta: meta.clone(),
                             },
                             0,
