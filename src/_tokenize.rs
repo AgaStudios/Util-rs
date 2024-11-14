@@ -43,7 +43,7 @@ impl PartialOrd for Location {
         }
     }
 }
-
+#[derive(Clone, Debug)]
 pub struct Token<TokenKind> {
     pub token_type: TokenKind,
     pub value: String,
