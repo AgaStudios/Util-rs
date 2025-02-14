@@ -21,11 +21,12 @@ impl PartialOrd for Position {
   }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Ord, Debug)]
+#[derive(Clone, PartialEq, Eq, Ord, Debug)]
 pub struct Location {
   pub start: Position,
   pub end: Position,
   pub length: usize,
+  pub file_name: String
 }
 
 impl PartialOrd for Location {
@@ -74,7 +75,7 @@ pub type TokenOption<'a, TK> = (TokenOptionCondition, TokenOptionResult<TK>);
 pub fn tokenize<TK>(
   input: String,
   options: Vec<TokenOption<TK>>,
-  meta: String,
+  file_name: String,
 ) -> Result<Vec<Token<TK>>, Box<dyn std::error::Error>> {
   let lines = input.lines();
   let mut tokens = Vec::new();
@@ -100,9 +101,9 @@ pub fn tokenize<TK>(
           column,
         };
         let (t, consumed) = match result {
-          TokenOptionResult::Full(f) => f(c, position, line.to_string(), meta.clone()),
+          TokenOptionResult::Full(f) => f(c, position, line.to_string(), file_name.clone()),
           TokenOptionResult::Meta(f) => {
-            let (token_type, meta) = f(meta.clone());
+            let (token_type, meta) = f(file_name.clone());
             (
               Token {
                 token_type,
@@ -114,6 +115,7 @@ pub fn tokenize<TK>(
                     column: column + 1,
                   },
                   length: 1,
+                  file_name: file_name.clone(),
                 },
                 meta,
               },
@@ -133,8 +135,9 @@ pub fn tokenize<TK>(
                     column: column + 1,
                   },
                   length: 1,
+                  file_name: file_name.clone(),
                 },
-                meta: meta.clone(),
+                meta: file_name.clone(),
               },
               0,
             )
@@ -152,8 +155,9 @@ pub fn tokenize<TK>(
                     column: column + 1,
                   },
                   length: 1,
+                  file_name: file_name.clone(),
                 },
-                meta: meta.clone(),
+                meta: file_name.clone(),
               },
               0,
             )
