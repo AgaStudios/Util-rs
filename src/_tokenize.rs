@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-#[derive(Clone, Copy, PartialEq, Eq, Ord, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Ord, Debug, Hash)]
 pub struct Position {
   pub line: usize,
   pub column: usize,
@@ -21,7 +21,7 @@ impl PartialOrd for Position {
   }
 }
 
-#[derive(Clone, PartialEq, Eq, Ord, Debug)]
+#[derive(Clone, PartialEq, Eq, Ord, Debug, Hash)]
 pub struct Location {
   pub start: Position,
   pub end: Position,
