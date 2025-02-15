@@ -1,7 +1,5 @@
-pub struct List<Item>(Vec<Item>)
-where
-  Item: Clone;
-impl<Item: Clone> List<Item> {
+pub struct List<Item>(Vec<Item>);
+impl<Item> List<Item> {
   pub fn from_vec(vec: Vec<Item>) -> Self {
     List(vec)
   }
@@ -10,9 +8,6 @@ impl<Item: Clone> List<Item> {
   }
   pub fn push(&mut self, item: Item) {
     self.0.push(item);
-  }
-  pub fn iter(&self) -> std::slice::Iter<Item> {
-    self.0.iter()
   }
   pub fn map<R, F>(&self, f: F) -> List<R>
   where
@@ -42,8 +37,11 @@ impl<Item: Clone> List<Item> {
   pub unsafe fn get_unchecked_mut(&mut self, index: usize) -> &mut Item {
     self.0.get_unchecked_mut(index)
   }
+  pub fn enumerate(self) -> std::iter::Enumerate<std::vec::IntoIter<Item>> {
+    self.into_iter().enumerate()
+  }
 }
-impl<Item: Clone + std::fmt::Display> List<Item> {
+impl<Item:std::fmt::Display> List<Item> {
   pub fn join(&self, sep: &str) -> String {
     self.map(|item| item.to_string()).0.join(&sep)
   }
@@ -53,13 +51,13 @@ impl<Item: Clone> Clone for List<Item> {
     List(self.0.iter().map(|item| item.clone()).collect())
   }
 }
-impl<Item: Clone + std::fmt::Display> std::fmt::Display for List<Item> {
+impl<Item:std::fmt::Display> std::fmt::Display for List<Item> {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     let str: Vec<String> = self.0.iter().map(|item| item.to_string()).collect();
     write!(f, "{}", str.join("\n"))
   }
 }
-impl<Item: Clone + PartialEq> PartialEq for List<Item> {
+impl<Item:PartialEq> PartialEq for List<Item> {
   fn eq(&self, other: &Self) -> bool {
     if self.len() != other.len() {
       return false;
@@ -74,8 +72,8 @@ impl<Item: Clone + PartialEq> PartialEq for List<Item> {
     return true;
   }
 }
-impl<Item: Clone + Eq> Eq for List<Item> {}
-impl<Item: Clone + PartialOrd> PartialOrd for List<Item> {
+impl<Item:Eq> Eq for List<Item> {}
+impl<Item:PartialOrd> PartialOrd for List<Item> {
   fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
     if self.len() != other.len() {
       return None;
@@ -90,7 +88,7 @@ impl<Item: Clone + PartialOrd> PartialOrd for List<Item> {
     return Some(std::cmp::Ordering::Equal);
   }
 }
-impl<Item: Clone + Ord> Ord for List<Item> {
+impl<Item:Ord> Ord for List<Item> {
   fn cmp(&self, other: &Self) -> std::cmp::Ordering {
     if self.len() != other.len() {
       return std::cmp::Ordering::Less;
@@ -107,25 +105,39 @@ impl<Item: Clone + Ord> Ord for List<Item> {
 }
 impl<Item: Clone + std::hash::Hash> std::hash::Hash for List<Item> {
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-    for item in self.iter() {
+    for item in self {
       item.hash(state);
     }
   }
 }
-impl<Item: Clone> std::ops::Index<usize> for List<Item> {
+impl<Item> std::ops::Index<usize> for List<Item> {
   type Output = Item;
   fn index(&self, index: usize) -> &Self::Output {
     self.get(index).unwrap()
   }
 }
-impl<Item: Clone> std::ops::IndexMut<usize> for List<Item> {
+impl<Item> std::ops::IndexMut<usize> for List<Item> {
   fn index_mut(&mut self, index: usize) -> &mut Self::Output {
     self.get_mut(index).unwrap()
   }
 }
-impl<Item: Clone + std::fmt::Debug> std::fmt::Debug for List<Item> {
+impl<Item:std::fmt::Debug> std::fmt::Debug for List<Item> {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     let str: Vec<String> = self.0.iter().map(|item| format!("{:?}", item)).collect();
     write!(f, "{}", str.join("\n"))
+  }
+}
+impl<Item> IntoIterator for List<Item> {
+  type Item = Item;
+  type IntoIter = std::vec::IntoIter<Item>;
+  fn into_iter(self) -> Self::IntoIter {
+    self.0.into_iter()
+  }
+}
+impl<Item: Clone> IntoIterator for &List<Item> {
+  type Item = Item;
+  type IntoIter = std::vec::IntoIter<Item>;
+  fn into_iter(self) -> Self::IntoIter {
+    self.clone().into_iter()
   }
 }
