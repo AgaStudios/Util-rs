@@ -1,5 +1,8 @@
 pub struct List<Item>(Vec<Item>);
 impl<Item> List<Item> {
+  pub fn is_empty(&self) -> bool {
+    self.0.is_empty()
+  }
   pub fn from_vec(vec: Vec<Item>) -> Self {
     List(vec)
   }
